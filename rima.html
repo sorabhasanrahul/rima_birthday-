@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Happy Birthday Rima 🎉</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{background:#f3e5cb;display:flex;justify-content:center;align-items:center;height:100vh;font-family:'Segoe UI',sans-serif;overflow:hidden;}
+
+  .envelope{position:relative;width:360px;height:260px;background:#fef7e0;border:2px solid #d4b28a;border-radius:8px;box-shadow:0 6px 14px rgba(0,0,0,0.2);overflow:hidden;perspective:1000px;transition:opacity 1s ease;}
+  .flap{position:absolute;top:0;left:0;width:100%;height:100%;background:linear-gradient(145deg,#e3c6a8,#f3e0c2);clip-path:polygon(0 0,100% 0,50% 50%);z-index:2;transform-origin:top;transition:transform 0.8s ease;}
+  .letter{position:absolute;top:100%;left:8%;width:84%;min-height:190px;background:white;border-radius:8px;box-shadow:0 4px 6px rgba(0,0,0,0.1);padding:30px 22px;text-align:center;line-height:1.8;transition:top 1s ease;z-index:1;}
+  .open-btn{position:absolute;bottom:10px;left:50%;transform:translateX(-50%);padding:10px 20px;background-color:#d97706;color:white;border:none;border-radius:25px;font-weight:bold;cursor:pointer;z-index:3;animation:bounce 1s infinite;}
+  @keyframes bounce{0%,100%{transform:translate(-50%,0);}50%{transform:translate(-50%,-8px);}}
+  .envelope.open .letter{top:15px;}
+  .envelope.open .flap{transform:rotateX(180deg);opacity:0;}
+  h3{color:#d97706;margin-bottom:10px;font-size:18px;}
+  p{font-size:15px;color:#333;}
+
+  canvas{display:none;position:fixed;top:0;left:0;width:100%;height:100%;z-index:10;background:black;}
+  #continueBtn{display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%) scale(0.5);padding:15px 30px;font-size:22px;font-weight:bold;background:#ff4081;color:white;border:none;border-radius:10px;cursor:pointer;z-index:20;box-shadow:0 0 15px rgba(255,64,129,0.6);animation:bounceIn 1s forwards;}
+  @keyframes bounceIn{0%{transform:translate(-50%,-50%) scale(0.3);opacity:0;}50%{transform:translate(-50%,-50%) scale(1.2);opacity:1;}70%{transform:translate(-50%,-50%) scale(0.9);}100%{transform:translate(-50%,-50%) scale(1);}}
+</style>
+</head>
+<body>
+
+<div class="envelope" id="envelope">
+  <div class="flap"></div>
+  <div class="letter">
+    <h3>Happy Birthday, Rima🎉</h3>
+    <p>
+      Keep smiling, keep inspiring 🌸<br>
+      — Rahul & Team💻💖
+    </p>
+  </div>
+  <button class="open-btn" onclick="openLetter()">Open</button>
+</div>
+
+<canvas id="canvas"></canvas>
+<button id="continueBtn">Let's Celebrate 🎆</button>
+
+<!-- Birthday Song -->
+<audio id="birthday-song" src="Happy_Birthday_song2.mp3"></audio>
+
+<script>
+const envelope=document.getElementById("envelope");
+const canvas=document.getElementById("canvas");
+const ctx=canvas.getContext("2d");
+const continueBtn=document.getElementById("continueBtn");
+const song=document.getElementById("birthday-song");
+
+function openLetter(){
+  document.querySelector(".open-btn").style.display="none";
+  envelope.classList.add("open");
+
+  // Play birthday song
+  song.currentTime = 0; 
+  song.play().catch(err => console.log("Autoplay blocked", err));
+
+  setTimeout(()=>{
+    envelope.style.opacity="0";
+    setTimeout(()=>{
+      envelope.style.display="none";
+      document.body.style.background="black";
+      canvas.style.display="block";
+      continueBtn.style.display="block";
+    },1000);
+  },5000);
+}
+
+continueBtn.addEventListener("click",()=>{
+  continueBtn.style.display="none";
+  startFireworks();
+});
+
+let fireworks=[];
+let rockets=[];
+let textParticles=[];
+
+function resizeCanvas(){canvas.width=window.innerWidth;canvas.height=window.innerHeight;}
+resizeCanvas();
+window.addEventListener("resize",resizeCanvas);
+
+class Particle{
+  constructor(x,y,color,targetX=null,targetY=null){
+    this.x=x; this.y=y; this.color=color; this.radius=Math.random()*2+1;
+    this.speedX=(Math.random()-0.5)*6; this.speedY=(Math.random()-0.5)*6;
+    this.alpha=1; this.targetX=targetX; this.targetY=targetY;
+  }
+  update(){
+    if(this.targetX!==null&&this.targetY!==null){
+      this.x+=(this.targetX-this.x)*0.05;
+      this.y+=(this.targetY-this.y)*0.05;
+      this.alpha=1;
+    } else {
+      this.x+=this.speedX; this.y+=this.speedY; this.alpha-=0.02;
+    }
+  }
+  draw(){
+    ctx.save();
+    ctx.globalAlpha=Math.max(this.alpha,0);
+    ctx.beginPath();
+    ctx.arc(this.x,this.y,this.radius,0,Math.PI*2);
+    ctx.fillStyle=this.color;
+    ctx.fill();
+    ctx.restore();
+  }
+}
+
+function createRocket(){
+  const x=Math.random()*canvas.width;
+  const y=canvas.height;
+  const speedY=-(Math.random()*5+7);
+  const explodeHeight=canvas.height*(0.3+Math.random()*0.2);
+  rockets.push({x,y,speedY,explodeHeight});
+}
+
+function explode(x,y){
+  for(let i=0;i<50;i++){fireworks.push(new Particle(x,y,`hsl(${Math.random()*360},100%,50%)`));}
+}
+
+function startFireworks(){
+  let startTime=Date.now();
+  const duration=4000;
+  const loop=setInterval(()=>{createRocket();},200);
+
+  function animate(){
+    ctx.fillStyle="rgba(0,0,0,0.25)";
+    ctx.fillRect(0,0,canvas.width,canvas.height);
+
+    rockets.forEach((r,i)=>{
+      r.y+=r.speedY;
+      if(r.y<=r.explodeHeight){explode(r.x,r.y); rockets.splice(i,1);}
+      else{ctx.beginPath(); ctx.arc(r.x,r.y,3,0,Math.PI*2); ctx.fillStyle='white'; ctx.fill();}
+    });
+
+    fireworks.forEach((p,i)=>{p.update(); p.draw(); if(p.alpha<=0) fireworks.splice(i,1);});
+
+    if(Date.now()-startTime<duration) requestAnimationFrame(animate);
+    else{clearInterval(loop); generateTextParticles();}
+  }
+  animate();
+}
+
+function generateTextParticles(){
+  textParticles=[];
+  const off=document.createElement("canvas"); off.width=canvas.width; off.height=canvas.height;
+  const octx=off.getContext("2d"); 
+  const lines=["Happy Birthday","Rima"];
+  const fontSize=Math.min(canvas.width/10,canvas.height/6);
+  octx.font=`bold ${fontSize}px Arial`; octx.textAlign="center"; octx.textBaseline="middle"; octx.fillStyle="white";
+  const lineHeight=fontSize*1.2; const startY=canvas.height/2 - (lines.length-1)/2*lineHeight;
+  lines.forEach((line,index)=>{octx.fillText(line,canvas.width/2,startY+index*lineHeight);});
+  const img=octx.getImageData(0,0,canvas.width,canvas.height);
+  const gap=Math.floor(fontSize/15);
+  for(let y=0;y<canvas.height;y+=gap){
+    for(let x=0;x<canvas.width;x+=gap){
+      const idx=(y*canvas.width+x)*4;
+      if(img.data[idx+3]>128) textParticles.push({x,y});
+    }
+  }
+  animateText();
+}
+
+function animateText(){
+  const particlesArr=[];
+  textParticles.forEach(p=>{
+    particlesArr.push(new Particle(Math.random()*canvas.width,canvas.height,`hsl(${Math.random()*360},100%,50%)`,p.x,p.y));
+  });
+
+  function loop(){
+    ctx.fillStyle="rgba(0,0,0,0.05)";
+    ctx.fillRect(0,0,canvas.width,canvas.height);
+    particlesArr.forEach(p=>{
+      p.update(); p.draw();
+    });
+    requestAnimationFrame(loop);
+  }
+  loop();
+}
+</script>
+
+</body>
+</html>
